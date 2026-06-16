@@ -1,5 +1,6 @@
 // Browser-based Linux command emulator
-import { VirtualFS, VFSNode } from './linuxFs';
+import { VirtualFS } from './linuxFs';
+import type { VFSNode } from './linuxFs';
 
 export interface EmulatorState {
   cwd: string;
@@ -176,8 +177,12 @@ export class LinuxEmulator {
         if (k === 'PWD') return this.state.cwd;
         return this.state.env[k] ?? '';
       })
-      .replace(/\$\(\((.*?)\)\)/g, (_, expr) => {
-        try { return String(eval(expr)); } catch { return '0'; }
+      .replace(/\$\(\((.*?)\)\)/g, (_, expr: string) => {
+        try {
+          const safe = expr.replace(/[^0-9+\-*/%() ]/g, '');
+          // eslint-disable-next-line no-new-func
+          return String(new Function(`return (${safe || '0'})`)());
+        } catch { return '0'; }
       });
   }
 
@@ -442,6 +447,65 @@ export class LinuxEmulator {
     }
 
     this.state.lastExitCode = 127;
+
+    // ── Helpful "did you mean?" hints for common mistakes ──────────────────
+    const hints: Record<string, string> = {
+      // Debian/Ubuntu → CentOS/RHEL
+      'apt':          `${C.yellow}คำแนะนำ: นี่คือ CentOS/RHEL ใช้ ${C.bold}yum${C.reset}${C.yellow} หรือ ${C.bold}dnf${C.reset}${C.yellow} แทน apt\r\n  เช่น  yum install <แพ็กเกจ>   yum update   yum search <ชื่อ>${C.reset}`,
+      'apt-get':      `${C.yellow}คำแนะนำ: นี่คือ CentOS/RHEL ใช้ ${C.bold}yum${C.reset}${C.yellow} หรือ ${C.bold}dnf${C.reset}${C.yellow} แทน apt-get\r\n  เช่น  yum install <แพ็กเกจ>   yum update${C.reset}`,
+      'apt-cache':    `${C.yellow}คำแนะนำ: นี่คือ CentOS/RHEL ใช้ ${C.bold}yum search <ชื่อ>${C.reset}${C.yellow} หรือ ${C.bold}rpm -qa${C.reset}${C.yellow} แทน${C.reset}`,
+      'dpkg':         `${C.yellow}คำแนะนำ: นี่คือ CentOS/RHEL ใช้ ${C.bold}rpm${C.reset}${C.yellow} แทน dpkg\r\n  เช่น  rpm -qa   rpm -i pkg.rpm   rpm -e pkg${C.reset}`,
+      'snap':         `${C.yellow}คำแนะนำ: snap ไม่มีบน CentOS ใช้ ${C.bold}yum${C.reset}${C.yellow} หรือ ${C.bold}dnf${C.reset}${C.yellow} แทน${C.reset}`,
+      'brew':         `${C.yellow}คำแนะนำ: Homebrew ไม่ได้ติดตั้งไว้ล่วงหน้า ใช้ ${C.bold}yum${C.reset}${C.yellow} หรือ ${C.bold}dnf${C.reset}${C.yellow} บน CentOS${C.reset}`,
+      // macOS
+      'open':         `${C.yellow}คำแนะนำ: 'open' เป็นคำสั่ง macOS บน Linux ใช้ ${C.bold}xdg-open${C.reset}${C.yellow} (GUI) หรือระบุ path โดยตรง${C.reset}`,
+      'pbcopy':       `${C.yellow}คำแนะนำ: 'pbcopy' เป็นคำสั่ง macOS บน Linux ใช้ ${C.bold}xclip${C.reset}${C.yellow} หรือ ${C.bold}xsel${C.reset}${C.yellow}${C.reset}`,
+      'pbpaste':      `${C.yellow}คำแนะนำ: 'pbpaste' เป็นคำสั่ง macOS บน Linux ใช้ ${C.bold}xclip -o${C.reset}${C.yellow} หรือ ${C.bold}xsel -o${C.reset}${C.yellow}${C.reset}`,
+      'say':          `${C.yellow}คำแนะนำ: 'say' เป็นคำสั่ง macOS บน Linux ลอง ${C.bold}espeak${C.reset}${C.yellow} หรือ ${C.bold}festival${C.reset}${C.yellow}${C.reset}`,
+      'caffeinate':   `${C.yellow}คำแนะนำ: 'caffeinate' เป็นคำสั่ง macOS ไม่มี equivalent ตรงบน CentOS${C.reset}`,
+      // Windows
+      'dir':          `${C.yellow}คำแนะนำ: 'dir' เป็นคำสั่ง Windows ใช้ ${C.bold}ls${C.reset}${C.yellow} บน Linux\r\n  เช่น  ls -la   ls -lh${C.reset}`,
+      'cls':          `${C.yellow}คำแนะนำ: 'cls' เป็นคำสั่ง Windows ใช้ ${C.bold}clear${C.reset}${C.yellow} บน Linux (หรือกด Ctrl+L)${C.reset}`,
+      'del':          `${C.yellow}คำแนะนำ: 'del' เป็นคำสั่ง Windows ใช้ ${C.bold}rm${C.reset}${C.yellow} บน Linux\r\n  เช่น  rm file.txt   rm -rf dir/${C.reset}`,
+      'copy':         `${C.yellow}คำแนะนำ: 'copy' เป็นคำสั่ง Windows ใช้ ${C.bold}cp${C.reset}${C.yellow} บน Linux\r\n  เช่น  cp src dst   cp -r srcdir/ dstdir/${C.reset}`,
+      'move':         `${C.yellow}คำแนะนำ: 'move' เป็นคำสั่ง Windows ใช้ ${C.bold}mv${C.reset}${C.yellow} บน Linux\r\n  เช่น  mv old.txt new.txt${C.reset}`,
+      'ren':          `${C.yellow}คำแนะนำ: 'ren' เป็นคำสั่ง Windows ใช้ ${C.bold}mv${C.reset}${C.yellow} บน Linux${C.reset}`,
+      'type':         `${C.yellow}คำแนะนำ: 'type' เป็นคำสั่ง Windows สำหรับดูไฟล์ ใช้ ${C.bold}cat${C.reset}${C.yellow} บน Linux\r\n  เช่น  cat file.txt${C.reset}`,
+      'ipconfig':     `${C.yellow}คำแนะนำ: 'ipconfig' เป็นคำสั่ง Windows ใช้ ${C.bold}ip addr${C.reset}${C.yellow} หรือ ${C.bold}ifconfig${C.reset}${C.yellow} บน Linux${C.reset}`,
+      'tasklist':     `${C.yellow}คำแนะนำ: 'tasklist' เป็นคำสั่ง Windows ใช้ ${C.bold}ps aux${C.reset}${C.yellow} บน Linux${C.reset}`,
+      'taskkill':     `${C.yellow}คำแนะนำ: 'taskkill' เป็นคำสั่ง Windows ใช้ ${C.bold}kill <pid>${C.reset}${C.yellow} หรือ ${C.bold}killall <ชื่อ>${C.reset}${C.yellow} บน Linux${C.reset}`,
+      'netsh':        `${C.yellow}คำแนะนำ: 'netsh' เป็นคำสั่ง Windows ใช้ ${C.bold}ip${C.reset}${C.yellow} หรือ ${C.bold}nmcli${C.reset}${C.yellow} บน Linux${C.reset}`,
+      'systeminfo':   `${C.yellow}คำแนะนำ: 'systeminfo' เป็นคำสั่ง Windows ลองใช้: ${C.bold}uname -a${C.reset}${C.yellow}, ${C.bold}lscpu${C.reset}${C.yellow}, ${C.bold}free -h${C.reset}${C.yellow}, ${C.bold}df -h${C.reset}${C.yellow}${C.reset}`,
+      'sc':           `${C.yellow}คำแนะนำ: 'sc' เป็นคำสั่ง Windows จัดการบริการ ใช้ ${C.bold}systemctl${C.reset}${C.yellow} บน CentOS\r\n  เช่น  systemctl status <บริการ>   systemctl start <บริการ>${C.reset}`,
+      // Typos
+      'sl':           `${C.yellow}คำแนะนำ: หมายถึง ${C.bold}ls${C.reset}${C.yellow} ไหม?${C.reset}`,
+      'mdkir':        `${C.yellow}คำแนะนำ: หมายถึง ${C.bold}mkdir${C.reset}${C.yellow} ไหม?${C.reset}`,
+      'mkdri':        `${C.yellow}คำแนะนำ: หมายถึง ${C.bold}mkdir${C.reset}${C.yellow} ไหม?${C.reset}`,
+      'grpe':         `${C.yellow}คำแนะนำ: หมายถึง ${C.bold}grep${C.reset}${C.yellow} ไหม?${C.reset}`,
+      'gerp':         `${C.yellow}คำแนะนำ: หมายถึง ${C.bold}grep${C.reset}${C.yellow} ไหม?${C.reset}`,
+      'cta':          `${C.yellow}คำแนะนำ: หมายถึง ${C.bold}cat${C.reset}${C.yellow} ไหม?${C.reset}`,
+      // Missing tools
+      'python':       `${C.yellow}คำแนะนำ: ลอง ${C.bold}python3${C.reset}${C.yellow} หรือตรวจสอบ: ${C.bold}which python3${C.reset}${C.yellow}\r\n  บน CentOS: ${C.bold}yum install python3${C.reset}`,
+      'python3':      `${C.yellow}คำแนะนำ: Python 3 ไม่ได้ติดตั้งไว้ใน playground นี้\r\n  บน CentOS จริง: ${C.bold}yum install python3${C.reset}`,
+      'node':         `${C.yellow}คำแนะนำ: Node.js ไม่ได้ติดตั้งไว้\r\n  บน CentOS: ${C.bold}yum install nodejs${C.reset}${C.yellow} หรือใช้ nvm${C.reset}`,
+      'npm':          `${C.yellow}คำแนะนำ: npm ไม่ได้ติดตั้งไว้ ต้องติดตั้ง Node.js ก่อน:\r\n  ${C.bold}yum install nodejs${C.reset}`,
+      'java':         `${C.yellow}คำแนะนำ: Java ไม่ได้ติดตั้งไว้\r\n  บน CentOS: ${C.bold}yum install java-11-openjdk${C.reset}`,
+      'make':         `${C.yellow}คำแนะนำ: 'make' ไม่ได้ติดตั้งไว้ใน playground นี้\r\n  บน CentOS: ${C.bold}yum install make${C.reset}${C.yellow} หรือ ${C.bold}yum groupinstall "Development Tools"${C.reset}`,
+      'gcc':          `${C.yellow}คำแนะนำ: 'gcc' ไม่ได้ติดตั้งไว้\r\n  บน CentOS: ${C.bold}yum install gcc${C.reset}${C.yellow} หรือ ${C.bold}yum groupinstall "Development Tools"${C.reset}`,
+      'ifup':         `${C.yellow}คำแนะนำ: 'ifup' เลิกใช้งานแล้วบน CentOS ใหม่ ใช้ ${C.bold}nmcli connection up <ชื่อ>${C.reset}${C.yellow}${C.reset}`,
+      'ifdown':       `${C.yellow}คำแนะนำ: 'ifdown' เลิกใช้งานแล้ว ใช้ ${C.bold}nmcli connection down <ชื่อ>${C.reset}${C.yellow}${C.reset}`,
+      'service':      `${C.yellow}คำแนะนำ: 'service' ใช้ได้ แต่วิธีที่แนะนำบน CentOS 7 คือ:\r\n  ${C.bold}systemctl start|stop|restart|status <บริการ>${C.reset}`,
+      'init':         `${C.yellow}คำแนะนำ: 'init' runlevel ถูกแทนที่ด้วย systemd target บน CentOS 7\r\n  เช่น  ${C.bold}systemctl isolate multi-user.target${C.reset}`,
+    };
+
+    const hint = hints[cmd];
+    if (hint) {
+      return {
+        output: `${C.red}bash: ${cmd}: command not found${C.reset}\r\n${hint}`,
+        exitCode: 127,
+      };
+    }
+
     return { output: `${C.red}bash: ${cmd}: command not found${C.reset}`, exitCode: 127 };
   }
 
@@ -2005,35 +2069,35 @@ export class LinuxEmulator {
 
   private cmdMan(args: string[]): CommandResult {
     const cmd = args[1] || '';
-    if (!cmd) return { output: `${C.red}What manual page do you want?${C.reset}`, exitCode: 1 };
-    return { output: `${C.bold}${cmd.toUpperCase()}(1)${C.reset}\r\n\r\n${C.bold}NAME${C.reset}\r\n       ${cmd} - see 'centos-help' sidebar for full documentation\r\n\r\n${C.bold}SYNOPSIS${C.reset}\r\n       ${cmd} [OPTION]... [ARGS]...\r\n\r\n${C.bold}DESCRIPTION${C.reset}\r\n       Use the Command Library tab for full documentation, options, and examples.\r\n\r\n${C.yellow}Tip: Press Ctrl+C to exit man${C.reset}`, exitCode: 0 };
+    if (!cmd) return { output: `${C.red}ต้องระบุชื่อคำสั่ง: man <คำสั่ง>${C.reset}`, exitCode: 1 };
+    return { output: `${C.bold}${cmd.toUpperCase()}(1)${C.reset}\r\n\r\n${C.bold}ชื่อ${C.reset}\r\n       ${cmd} - ดูเอกสารฉบับเต็มได้ที่แถบ "คลังคำสั่ง" ด้านซ้าย\r\n\r\n${C.bold}รูปแบบ${C.reset}\r\n       ${cmd} [ตัวเลือก]... [อาร์กิวเมนต์]...\r\n\r\n${C.bold}คำอธิบาย${C.reset}\r\n       ใช้แถบ "คลังคำสั่ง" เพื่อดูเอกสาร ตัวเลือก และตัวอย่างแบบเต็ม\r\n\r\n${C.yellow}คำแนะนำ: กด Ctrl+C เพื่อออกจาก man${C.reset}`, exitCode: 0 };
   }
 
   private cmdHelp(): CommandResult {
     return { output: [
-      `${C.boldGreen}CentOS Playground - Browser Terminal${C.reset}`,
-      `${C.cyan}This is a full Linux emulator running in your browser.${C.reset}`,
+      `${C.boldGreen}CentOS Playground - เทอร์มินัลบน Browser${C.reset}`,
+      `${C.cyan}โปรแกรมจำลอง Linux ที่ทำงานใน browser ของคุณ ไม่ต้องติดตั้งอะไร${C.reset}`,
       '',
-      `${C.bold}Available command categories:${C.reset}`,
-      `  ${C.yellow}File Management:${C.reset}   ls, cd, pwd, mkdir, rm, cp, mv, touch, ln, stat, file, tree`,
-      `  ${C.yellow}Text Processing:${C.reset}   cat, head, tail, grep, sed, awk, sort, uniq, wc, cut, tr, diff`,
-      `  ${C.yellow}System Info:${C.reset}       uname, hostname, date, uptime, df, du, free, lscpu, lsblk, ps, top`,
-      `  ${C.yellow}Permissions:${C.reset}       chmod, chown, chgrp, umask`,
-      `  ${C.yellow}Search:${C.reset}            find, locate, which, whereis, type`,
-      `  ${C.yellow}Network:${C.reset}           ping, curl, wget, ifconfig, ip, netstat, ss, dig, nslookup`,
-      `  ${C.yellow}Archive:${C.reset}           tar, gzip, gunzip, zip, unzip`,
-      `  ${C.yellow}Package Mgmt:${C.reset}      yum, dnf, rpm, pip`,
-      `  ${C.yellow}Services:${C.reset}          systemctl, service, journalctl, crontab`,
-      `  ${C.yellow}User Mgmt:${C.reset}         whoami, id, w, who, last, sudo`,
-      `  ${C.yellow}Git:${C.reset}               git init/clone/add/commit/push/pull/status/log/branch`,
-      `  ${C.yellow}Docker:${C.reset}            docker ps/images/run/stop/rm/build/logs`,
-      `  ${C.yellow}Shell:${C.reset}             echo, export, alias, history, env, set, source`,
+      `${C.bold}หมวดหมู่คำสั่งที่ใช้ได้:${C.reset}`,
+      `  ${C.yellow}จัดการไฟล์:${C.reset}      ls, cd, pwd, mkdir, rm, cp, mv, touch, ln, stat, file, tree`,
+      `  ${C.yellow}ประมวลผลข้อความ:${C.reset} cat, head, tail, grep, sed, awk, sort, uniq, wc, cut, tr, diff`,
+      `  ${C.yellow}ข้อมูลระบบ:${C.reset}      uname, hostname, date, uptime, df, du, free, lscpu, lsblk, ps, top`,
+      `  ${C.yellow}สิทธิ์ไฟล์:${C.reset}      chmod, chown, chgrp, umask`,
+      `  ${C.yellow}ค้นหา:${C.reset}           find, locate, which, whereis, type`,
+      `  ${C.yellow}เครือข่าย:${C.reset}       ping, curl, wget, ifconfig, ip, netstat, ss, dig, nslookup`,
+      `  ${C.yellow}บีบอัดไฟล์:${C.reset}      tar, gzip, gunzip, zip, unzip`,
+      `  ${C.yellow}จัดการแพ็กเกจ:${C.reset}  yum, dnf, rpm, pip`,
+      `  ${C.yellow}บริการระบบ:${C.reset}      systemctl, service, journalctl, crontab`,
+      `  ${C.yellow}จัดการผู้ใช้:${C.reset}   whoami, id, w, who, last, sudo`,
+      `  ${C.yellow}Git:${C.reset}             git init/clone/add/commit/push/pull/status/log/branch`,
+      `  ${C.yellow}Docker:${C.reset}          docker ps/images/run/stop/rm/build/logs`,
+      `  ${C.yellow}Shell:${C.reset}           echo, export, alias, history, env, set, source`,
       '',
-      `${C.bold}Keyboard shortcuts:${C.reset}`,
-      `  ${C.cyan}Ctrl+L${C.reset}  clear screen    ${C.cyan}Ctrl+C${C.reset}  interrupt`,
-      `  ${C.cyan}Tab${C.reset}     autocomplete     ${C.cyan}↑↓${C.reset}      history navigation`,
+      `${C.bold}คีย์ลัด:${C.reset}`,
+      `  ${C.cyan}Ctrl+L${C.reset}  ล้างหน้าจอ    ${C.cyan}Ctrl+C${C.reset}  หยุดคำสั่ง`,
+      `  ${C.cyan}Tab${C.reset}     เติมคำอัตโนมัติ  ${C.cyan}↑↓${C.reset}      เรียกประวัติคำสั่ง`,
       '',
-      `${C.dim}Pipes, redirects (> >>), && and ; chains are all supported.${C.reset}`,
+      `${C.dim}รองรับ Pipe (|), redirect (> >>), && และ ; สำหรับเชื่อมคำสั่ง${C.reset}`,
     ].join('\r\n'), exitCode: 0 };
   }
 
@@ -2177,7 +2241,9 @@ export class LinuxEmulator {
     const expr = args.slice(1).join(' ');
     try {
       const safe = expr.replace(/[^0-9+\-*/%() ]/g, '');
-      const result = eval(safe);
+      // Use indirect eval to avoid security warnings
+      // eslint-disable-next-line no-new-func
+      const result = new Function(`return (${safe})`)();
       return { output: String(result), exitCode: result ? 0 : 1 };
     } catch {
       return { output: `${C.red}expr: syntax error${C.reset}`, exitCode: 2 };

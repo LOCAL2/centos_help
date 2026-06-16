@@ -2,6 +2,9 @@
 
 export type FileType = 'file' | 'directory' | 'symlink';
 
+// Re-exported as a type alias so it can be used in import/export
+export type VFSNodeType = VFSNode;
+
 export interface VFSNode {
   type: FileType;
   name: string;

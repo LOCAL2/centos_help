@@ -29,10 +29,10 @@ export function CommandLibrary({ searchQuery = '', selectedCategory: propCategor
       <div className="library-header">
         <h1 className="library-title">
           {activeCategory
-            ? categories.find(c => c.id === activeCategory)?.name ?? 'Commands'
-            : 'All Commands'}
+            ? categories.find(c => c.id === activeCategory)?.name ?? 'คำสั่ง'
+            : 'คำสั่งทั้งหมด'}
         </h1>
-        <span className="library-count">{displayResults.length} commands</span>
+        <span className="library-count">{displayResults.length} คำสั่ง</span>
       </div>
 
       <div className="category-filter-bar">
@@ -40,7 +40,7 @@ export function CommandLibrary({ searchQuery = '', selectedCategory: propCategor
           className={`cat-filter-btn${!activeCategory ? ' cat-filter-btn--active' : ''}`}
           onClick={() => selectCategory(null)}
         >
-          All
+          ทั้งหมด
         </button>
         {categories.map(cat => (
           <button
@@ -57,8 +57,8 @@ export function CommandLibrary({ searchQuery = '', selectedCategory: propCategor
 
       {displayResults.length === 0 ? (
         <div className="library-empty">
-          <p>No commands found{searchQuery ? ` for "${searchQuery}"` : ''}.</p>
-          <button className="btn-secondary" onClick={() => selectCategory(null)}>Clear filter</button>
+          <p>ไม่พบคำสั่ง{searchQuery ? ` สำหรับ "${searchQuery}"` : ''}</p>
+          <button className="btn-secondary" onClick={() => selectCategory(null)}>ล้างตัวกรอง</button>
         </div>
       ) : (
         <div className="commands-grid">

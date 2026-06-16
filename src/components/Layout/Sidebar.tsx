@@ -18,9 +18,9 @@ export function Sidebar({ isOpen, onClose, searchQuery, onSearch, selectedCatego
   const getCount = (catId: string) => commands.filter(c => c.category === catId).length;
 
   const navItems = [
-    { to: '/', icon: <BookOpen size={16} />, label: 'Library' },
-    { to: '/terminal', icon: <Terminal size={16} />, label: 'Terminal' },
-    { to: '/split', icon: <LayoutTemplate size={16} />, label: 'Split View' },
+    { to: '/', icon: <BookOpen size={16} />, label: 'คลังคำสั่ง' },
+    { to: '/terminal', icon: <Terminal size={16} />, label: 'เทอร์มินัล' },
+    { to: '/split', icon: <LayoutTemplate size={16} />, label: 'แสดงพร้อมกัน' },
   ];
 
   return (
@@ -41,11 +41,11 @@ export function Sidebar({ isOpen, onClose, searchQuery, onSearch, selectedCatego
           <Search size={14} className="sidebar-search-icon" />
           <input
             type="text"
-            placeholder="Search commands..."
+            placeholder="ค้นหาคำสั่ง..."
             value={searchQuery}
             onChange={e => { onSearch(e.target.value); navigate('/'); }}
             className="sidebar-search-input"
-            aria-label="Search commands"
+            aria-label="ค้นหาคำสั่ง"
           />
           {searchQuery && (
             <button className="sidebar-search-clear" onClick={() => onSearch('')} aria-label="Clear search">
@@ -68,14 +68,14 @@ export function Sidebar({ isOpen, onClose, searchQuery, onSearch, selectedCatego
           ))}
         </nav>
 
-        <div className="sidebar-section-title">Categories</div>
+        <div className="sidebar-section-title">หมวดหมู่</div>
         <div className="sidebar-categories">
           <button
             className={`sidebar-category${!selectedCategory ? ' sidebar-category--active' : ''}`}
             onClick={() => { onSelectCategory(null); navigate('/'); onClose(); }}
           >
             <span className="sidebar-category-icon">📋</span>
-            <span className="sidebar-category-name">All Commands</span>
+            <span className="sidebar-category-name">คำสั่งทั้งหมด</span>
             <span className="sidebar-category-count">{commands.length}</span>
           </button>
           {categories.map(cat => (

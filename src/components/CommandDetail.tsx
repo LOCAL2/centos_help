@@ -33,8 +33,8 @@ export function CommandDetail({ commandId: propId, embedded = false }: CommandDe
   if (!command) {
     return (
       <div className="command-detail-empty">
-        <p>Command not found.</p>
-        {!embedded && <button className="btn-back" onClick={() => navigate('/')}><ArrowLeft size={16} /> Back</button>}
+        <p>ไม่พบคำสั่งนี้</p>
+        {!embedded && <button className="btn-back" onClick={() => navigate('/')}><ArrowLeft size={16} /> กลับ</button>}
       </div>
     );
   }
@@ -43,9 +43,9 @@ export function CommandDetail({ commandId: propId, embedded = false }: CommandDe
     <div className={`command-detail${embedded ? ' command-detail--embedded' : ''}`}>
       {!embedded && (
         <div className="command-detail-topbar">
-          <button className="btn-back" onClick={() => navigate(-1)}><ArrowLeft size={16} /> Back</button>
+          <button className="btn-back" onClick={() => navigate(-1)}><ArrowLeft size={16} /> กลับ</button>
           <button className="btn-terminal" onClick={() => navigate(`/split/${command.id}`)}>
-            <Terminal size={14} /> Try in Terminal
+            <Terminal size={14} /> ทดลองใน Terminal
           </button>
         </div>
       )}
@@ -62,7 +62,7 @@ export function CommandDetail({ commandId: propId, embedded = false }: CommandDe
       <p className="command-detail-description">{command.longDescription}</p>
 
       <section className="command-detail-section">
-        <h2 className="section-title">Syntax</h2>
+        <h2 className="section-title">รูปแบบคำสั่ง</h2>
         <div className="syntax-block">
           <code>{command.syntax}</code>
           <CopyBtn text={command.syntax} />
@@ -71,7 +71,7 @@ export function CommandDetail({ commandId: propId, embedded = false }: CommandDe
 
       {command.options.length > 0 && (
         <section className="command-detail-section">
-          <h2 className="section-title">Options</h2>
+          <h2 className="section-title">ตัวเลือก</h2>
           <div className="options-table">
             {command.options.map(opt => (
               <div key={opt.flag} className="options-row">
@@ -85,7 +85,7 @@ export function CommandDetail({ commandId: propId, embedded = false }: CommandDe
 
       {command.examples.length > 0 && (
         <section className="command-detail-section">
-          <h2 className="section-title">Examples</h2>
+          <h2 className="section-title">ตัวอย่าง</h2>
           <div className="examples-list">
             {command.examples.map((ex, i) => (
               <div key={i} className="example-item">
@@ -103,7 +103,7 @@ export function CommandDetail({ commandId: propId, embedded = false }: CommandDe
 
       {command.tips.length > 0 && (
         <section className="command-detail-section">
-          <h2 className="section-title"><Lightbulb size={16} className="section-icon" /> Tips</h2>
+          <h2 className="section-title"><Lightbulb size={16} className="section-icon" /> เคล็ดลับ</h2>
           <ul className="tips-list">
             {command.tips.map((tip, i) => <li key={i} className="tip-item">{tip}</li>)}
           </ul>
@@ -112,7 +112,7 @@ export function CommandDetail({ commandId: propId, embedded = false }: CommandDe
 
       {command.bestPractices.length > 0 && (
         <section className="command-detail-section">
-          <h2 className="section-title"><Star size={16} className="section-icon" /> Best Practices</h2>
+          <h2 className="section-title"><Star size={16} className="section-icon" /> แนวทางปฏิบัติที่ดี</h2>
           <ul className="tips-list tips-list--green">
             {command.bestPractices.map((bp, i) => <li key={i} className="tip-item">{bp}</li>)}
           </ul>
@@ -121,7 +121,7 @@ export function CommandDetail({ commandId: propId, embedded = false }: CommandDe
 
       {command.relatedCommands.length > 0 && (
         <section className="command-detail-section">
-          <h2 className="section-title"><Link2 size={16} className="section-icon" /> Related Commands</h2>
+          <h2 className="section-title"><Link2 size={16} className="section-icon" /> คำสั่งที่เกี่ยวข้อง</h2>
           <div className="related-commands">
             {command.relatedCommands.map(rel => {
               const relCmd = commands.find(c => c.name === rel || c.id === rel);

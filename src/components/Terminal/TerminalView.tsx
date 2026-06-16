@@ -65,14 +65,14 @@ export function TerminalView({ embedded = false, initialCommand }: TerminalViewP
           <span className="terminal-dot terminal-dot--green" />
           <TermIcon size={14} className="terminal-icon" />
           <span className="terminal-title">user@centos-playground</span>
-          {isStarted && <span className="terminal-badge terminal-badge--live">● LIVE</span>}
+          {isStarted && <span className="terminal-badge terminal-badge--live">● เชื่อมต่อ</span>}
         </div>
         <div className="terminal-toolbar-right">
           <button
             className="terminal-btn"
             onClick={clearTerminal}
-            title="Clear (Ctrl+L)"
-            aria-label="Clear terminal"
+            title="ล้างหน้าจอ (Ctrl+L)"
+            aria-label="ล้างหน้าจอ"
             disabled={!isStarted}
           >
             <Trash2 size={13} />
@@ -80,8 +80,8 @@ export function TerminalView({ embedded = false, initialCommand }: TerminalViewP
           <button
             className="terminal-btn"
             onClick={reset}
-            title="Reset session"
-            aria-label="Reset terminal session"
+            title="รีเซ็ต session"
+            aria-label="รีเซ็ต session"
             disabled={!isStarted}
           >
             <RefreshCw size={13} />
@@ -89,8 +89,8 @@ export function TerminalView({ embedded = false, initialCommand }: TerminalViewP
           <button
             className="terminal-btn"
             onClick={handleFullscreen}
-            title="Toggle fullscreen (F11)"
-            aria-label="Toggle fullscreen"
+            title="เต็มจอ"
+            aria-label="เต็มจอ"
           >
             {isFullscreen ? <Minimize2 size={13} /> : <Expand size={13} />}
           </button>
@@ -105,20 +105,20 @@ export function TerminalView({ embedded = false, initialCommand }: TerminalViewP
         <div className="terminal-overlay">
           <div className="terminal-overlay-content">
             <TermIcon size={52} className="terminal-overlay-icon" />
-            <h3>CentOS Linux Terminal</h3>
-            <p>A fully emulated CentOS 7 environment running entirely in your browser.</p>
+            <h3>เทอร์มินัล CentOS Linux</h3>
+            <p>จำลอง CentOS 7 ทำงานใน browser ได้เลย ไม่ต้องติดตั้ง</p>
             <p className="terminal-overlay-sub">
-              60+ real commands · virtual filesystem · pipes & redirects
+              60+ คำสั่งจริง · ระบบไฟล์เสมือน · pipe & redirect
             </p>
             <button className="terminal-start-btn" onClick={start} autoFocus>
               <Power size={16} />
-              Launch Terminal
+              เปิดเทอร์มินัล
             </button>
             <div className="terminal-shortcuts">
-              <span><kbd>Ctrl+L</kbd> clear</span>
-              <span><kbd>Ctrl+C</kbd> interrupt</span>
-              <span><kbd>Tab</kbd> complete</span>
-              <span><kbd>↑↓</kbd> history</span>
+              <span><kbd>Ctrl+L</kbd> ล้างหน้าจอ</span>
+              <span><kbd>Ctrl+C</kbd> หยุด</span>
+              <span><kbd>Tab</kbd> เติมคำ</span>
+              <span><kbd>↑↓</kbd> ประวัติ</span>
             </div>
           </div>
         </div>
