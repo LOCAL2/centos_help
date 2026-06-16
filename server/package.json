@@ -1,0 +1,22 @@
+{
+  "name": "server",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/dockerode": "^4.0.1",
+    "@types/express": "^5.0.6",
+    "@types/uuid": "^11.0.0",
+    "@types/ws": "^8.18.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "dockerode": "^5.0.0",
+    "express": "^5.2.1",
+    "uuid": "^14.0.0",
+    "ws": "^8.21.0"
+  }
+}
