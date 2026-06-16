@@ -716,35 +716,44 @@ code, pre { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
   overflow: hidden;
 }
 
-.terminal-icon { color: #4ade80; flex-shrink: 0; }
-.terminal-title { font-size: 0.875rem; font-weight: 600; color: #e6edf3; white-space: nowrap; }
-
-.status-indicator {
-  width: 8px;
-  height: 8px;
+/* macOS-style dots */
+.terminal-dot {
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   flex-shrink: 0;
+  display: inline-block;
+}
+.terminal-dot--red    { background: #ff5f57; }
+.terminal-dot--yellow { background: #febc2e; }
+.terminal-dot--green  { background: #28c840; }
+
+.terminal-icon { color: #4ade80; flex-shrink: 0; }
+.terminal-title { font-size: 0.875rem; font-weight: 600; color: #e6edf3; white-space: nowrap; font-family: monospace; }
+
+.terminal-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+}
+.terminal-badge--live {
+  color: #4ade80;
   animation: pulse-dot 2s infinite;
 }
-.status-indicator--connected { background: #4ade80; }
-.status-indicator--connecting { background: #facc15; }
-.status-indicator--disconnected { background: #6e7681; animation: none; }
 
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
 
-.terminal-status-text { font-size: 0.78rem; color: #8b949e; }
-.terminal-error-badge {
-  font-size: 0.75rem;
-  color: #facc15;
-  background: rgba(250,204,21,0.1);
-  padding: 2px 8px;
-  border-radius: 10px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.terminal-wrapper--fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+  height: 100vh !important;
 }
 
 .terminal-toolbar-right {
@@ -782,7 +791,7 @@ code, pre { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
   flex: 1;
   overflow: hidden;
   padding: 8px;
-  background: #1a1a2e;
+  background: #0d1117;
 }
 
 .terminal-container .xterm { height: 100%; }
